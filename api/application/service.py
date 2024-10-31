@@ -12,14 +12,16 @@ class Service:
 
     def daily(
             self,
+            user_id: str,
             field: list[str]
     ) -> list[str]:
-        missions = self.repo.daily(field)
+        missions = self.repo.daily(user_id, field)
         return missions
 
     def autonomous(
             self,
+            user_id: str,
             field: list[str]
     ) -> list[str]:
-        missions = self.repo.daily(field)
+        missions = self.repo.autonomous(user_id, field)
         return missions
