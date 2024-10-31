@@ -1,7 +1,11 @@
 from fastapi import FastAPI
 import uvicorn
+from api.interface.controllers.controller import router
+from containers import Container
 
 app = FastAPI()
+app.container = Container()
+app.include_router(router=router)
 
 
 @app.get("/")

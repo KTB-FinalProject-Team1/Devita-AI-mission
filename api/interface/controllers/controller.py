@@ -14,7 +14,7 @@ class DailyRequestDTO(BaseModel):
 
 class Mission(BaseModel):
     level: str
-    content: list[str]
+    content: str
 
 
 class DailyResponseDTO(BaseModel):
@@ -36,12 +36,15 @@ def daily(
 
     return DailyResponseDTO(missions=res)
 
+
 class AutonomousRequestDTO(BaseModel):
     user_id: str
     fields: list[str]
 
+
 class AutonomousResponseDTO(BaseModel):
     missions: list[str]
+
 
 @router.post('/autonomous')
 @inject
@@ -50,5 +53,5 @@ def autonomous(
         service: Service = Depends(Provide[Container.service])
 ) -> AutonomousResponseDTO:
     missions = service.autonomous(req.user_id, req.fields)
-
+    print(len(missions))
     return AutonomousResponseDTO(missions=missions)
