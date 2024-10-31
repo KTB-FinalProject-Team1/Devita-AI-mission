@@ -27,7 +27,7 @@ def daily(
         req: DailyRequestDTO,
         service: Service = Depends(Provide[Container.service])
 ) -> DailyResponseDTO:
-    missions = service(req.user_id, req.fields)
+    missions = service.daily(req.user_id, req.fields)
     res = [
         Mission(level="상", content=missions[0]),
         Mission(level="중", content=missions[1]),
@@ -35,3 +35,20 @@ def daily(
     ]
 
     return DailyResponseDTO(missions=res)
+
+class AutonomousRequestDTO(BaseModel):
+    user_id: str
+    fields: list[str]
+
+class AutonomousResponseDTO(BaseModel):
+    missions: list[str]
+
+@router.post('/autonomous')
+@inject
+def autonomous(
+        req: AutonomousRequestDTO,
+        service: Service = Depends(Provide[Container.service])
+) -> AutonomousResponseDTO:
+    missions = service.autonomous(req.user_id, req.fields)
+
+    return AutonomousResponseDTO(missions=missions)
