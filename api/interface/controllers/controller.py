@@ -22,7 +22,6 @@ def daily(
 ) -> DailyResponseDTO:
     """
     데일리 미션을 생성하는 API입니다. 유저 ID와 원하는 분야를 함께 바디에 실어줘야 합니다.
-
     - **userId**: 유저 식별 PK
     - **categories**: 미션 생성 분야
 
@@ -96,5 +95,6 @@ def autonomous(
     }
     """
     missions = service.autonomous(req.userId, req.subCategory)
+
     print(len(missions))
     return AutonomousResponseDTO(missions=missions)

@@ -8,6 +8,9 @@ pipeline {
         AWS_REGION = 'ap-northeast-2'
         AWS_CREDENTIALS = credentials('AwsCredentials')
         INSTANCE_ID = 'i-0011ace91cb94a13f'
+        AWS_S3_BUCKET = 'devita-env'
+        S3_ENV_FILE = 'ai/.env'
+        LOCAL_ENV_FILE = '.'
     }
     stages {
         stage('Check for Previous Builds') {
@@ -40,6 +43,15 @@ pipeline {
                     export AWS_ACCESS_KEY_ID=$(echo $AWS_CREDENTIALS | cut -d':' -f1)
                     export AWS_SECRET_ACCESS_KEY=$(echo $AWS_CREDENTIALS | cut -d':' -f2)
                     aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+                    '''
+                }
+            }
+        }
+        stage('Download from S3') {
+            steps {
+                script {
+                    sh '''
+                    aws s3 cp s3://$AWS_S3_BUCKET/$S3_ENV_FILE $LOCAL_ENV_FILE --region $AWS_REGION
                     '''
                 }
             }
@@ -99,6 +111,8 @@ pipeline {
                         docker run -d --name devita_ai -p 8000:8000 $ECR_REGISTRY/$ECR_REPO_NAME:$IMAGE_TAG
                         docker ps -a
                         '''
+
+                        build job: 'cd_pipeline'
                     }
                 }
             }
