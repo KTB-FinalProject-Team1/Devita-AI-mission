@@ -8,6 +8,10 @@ pipeline {
         AWS_REGION = 'ap-northeast-2'
         AWS_CREDENTIALS = credentials('AwsCredentials')
         INSTANCE_ID = 'i-0011ace91cb94a13f'
+
+        AWS_S3_BUCKET = 'devita-env'
+        S3_ENV_FILE = 'ai/.env'
+        LOCAL_ENV_FILE = '.'
     }
     stages {
         stage('Check for Previous Builds') {
@@ -44,6 +48,15 @@ pipeline {
                 }
             }
         }
+        stage('Download from S3') {
+            steps {
+                script {
+                    sh '''
+                    aws s3 cp s3://$AWS_S3_BUCKET/$S3_ENV_FILE $LOCAL_ENV_FILE --region $AWS_REGION
+                    '''
+                }
+            }
+        }
         stage('Build') {
             steps {
                 script {
@@ -66,7 +79,7 @@ pipeline {
         stage('Start EC2 Instance and Deploy') {
             steps {
                 script {
-                    
+
                         build job: 'cd_pipeline'
                     }
                 }
