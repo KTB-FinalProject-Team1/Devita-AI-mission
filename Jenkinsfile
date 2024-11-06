@@ -66,6 +66,7 @@ pipeline {
         stage('Start EC2 Instance and Deploy') {
             steps {
                 script {
+                    
                         build job: 'cd_pipeline'
                     }
                 }
