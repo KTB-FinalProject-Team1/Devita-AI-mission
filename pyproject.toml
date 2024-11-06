@@ -10,7 +10,8 @@ python = "^3.11"
 fastapi = "^0.115.2"
 uvicorn = {extras = ["standard"], version = "^0.32.0"}
 dependency-injector = "^4.42.0"
-
+transformers = "^4.46.1"
+accelerate = ">=0.26.0"
 
 [build-system]
 requires = ["poetry-core"]
