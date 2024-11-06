@@ -1,18 +1,15 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 import torch
 import json
-import os
+# from vllm import LLM, SamplingParams
+# from vllm.engine.arg_utils import EngineArgs
+
 
 class LLMManager:
     _instance = None
     _model = None
     _tokenizer = None
     _device = None
-
-    # 현재 디렉토리 구조에 맞게 경로 설정
-    BASE_PATH = "/Users/do-yoon/work/devita/models/Llama-3-Open-Ko-8B"
-    MODEL_PATH = os.path.join(BASE_PATH, "model")
-    TOKENIZER_PATH = os.path.join(BASE_PATH, "tokenizer")
 
     @classmethod
     def get_instance(cls):
@@ -25,35 +22,19 @@ class LLMManager:
             raise Exception("This class is a singleton!")
         else:
             LLMManager._instance = self
-            self._device = "mps" if torch.backends.mps.is_available() else "cpu"
 
-    def load_model(self):
-        """로컬 저장소에서 모델 로드"""
+    def load_model(self, model_name: str = 'beomi/Llama-3-Open-Ko-8B'):
+        """VLLM을 사용하여 모델 로드"""
         if self._model is None:
-            try:
-                # 토크나이저 로드
-                print(f"Loading tokenizer from: {self.TOKENIZER_PATH}")
-                self._tokenizer = AutoTokenizer.from_pretrained(
-                    self.TOKENIZER_PATH,
-                    local_files_only=True,
-                    trust_remote_code=True
-                )
-                print("Tokenizer loaded successfully!")
-
-                # 모델 로드
-                print(f"Loading model from: {self.MODEL_PATH}")
-                self._model = AutoModelForCausalLM.from_pretrained(
-                    self.MODEL_PATH,
-                    local_files_only=True,
-                    torch_dtype=torch.float16,
-                    device_map="auto",
-                    trust_remote_code=True
-                )
-                print("Model loaded successfully!")
-
-            except Exception as e:
-                print(f"Error loading model: {str(e)}")
-                raise
+            self._tokenizer = AutoTokenizer.from_pretrained(model_name)
+            self._model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                torch_dtype=torch.float16
+            )
+            # self._model = LLM(model="facebook/opt-125m",
+            #     tensor_parallel_size=4,  # GPU 병렬 처리 수
+            #     trust_remote_code=True
+            # )
 
     @property
     def model(self):
@@ -66,82 +47,6 @@ class LLMManager:
         if self._tokenizer is None:
             raise Exception("Tokenizer not loaded. Call load_model first.")
         return self._tokenizer
-
-    def mission_generator_daily(self, main_category, sub_category):
-        """미션 생성 함수"""
-        instruction = self.generate_mission_prompt(main_category, sub_category)
-
-        try:
-            # 입력 텍스트 구성
-            prompt = f"""
-            System: {instruction['system']}
-
-            Instruction: {instruction['instruction']}
-
-            User: {instruction['user']}
-            
-            Assistant:
-            """
-
-            # 토크나이저로 입력 처리
-            inputs = self._tokenizer(
-                prompt,
-                return_tensors="pt",
-                truncation=True,
-                max_length=2048
-            ).to(self._device)
-
-            # 생성 파라미터 설정
-            generation_config = {
-                "max_new_tokens": 1024,
-                "do_sample": True,
-                "temperature": 0.8,
-                "top_p": 0.9,
-                "num_return_sequences": 1,
-                "pad_token_id": self._tokenizer.pad_token_id,
-                "eos_token_id": self._tokenizer.eos_token_id,
-            }
-
-            # 텍스트 생성
-            with torch.no_grad():
-                outputs = self._model.generate(
-                    **inputs,
-                    **generation_config
-                )
-
-            # 생성된 텍스트 디코딩
-            generated_text = self._tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-            # JSON 형식 추출 시도
-            try:
-                # JSON 부분만 추출
-                json_start = generated_text.find('{')
-                json_end = generated_text.rfind('}') + 1
-                if json_start == -1 or json_end == 0:
-                    raise json.JSONDecodeError("No JSON found", generated_text, 0)
-                json_str = generated_text[json_start:json_end]
-
-                # JSON 파싱
-                output_dict = json.loads(json_str)
-
-                return {
-                    "mission_1": output_dict.get("mission_1", ""),
-                    "mission_2": output_dict.get("mission_2", ""),
-                    "mission_3": output_dict.get("mission_3", "")
-                }
-
-            except json.JSONDecodeError as e:
-                print(f"JSON parsing error: {str(e)}")
-                print(f"Generated text: {generated_text}")
-                return {
-                    "mission_1": "Error parsing JSON",
-                    "mission_2": "Error parsing JSON",
-                    "mission_3": "Error parsing JSON"
-                }
-
-        except Exception as e:
-            print(f"Error in mission generation: {str(e)}")
-            return None
 
     def generate_mission_prompt(self, main_category, sub_category):
         if main_category == "cs":
@@ -245,14 +150,52 @@ class LLMManager:
 
         return prompt
 
-# 테스트 코드
-# if __name__ == "__main__":
-#     # LLM 매니저 인스턴스 생성
-#     llm = LLMManager.get_instance()
-#
-#     # 모델 로드
-#     llm.load_model()
-#
-#     # 미션 생성 테스트
-#     result = llm.mission_generator_daily("cs", "알고리즘")
-#     print(json.dumps(result, indent=2, ensure_ascii=False))
+    def mission_generator_daily(self, main_category, sub_category):
+        instruction = self.generate_mission_prompt(main_category, sub_category)
+
+        # Hugging Face 모델 입력
+        messages = [
+            {"role": "system", "content": instruction["system"]},
+            {"role": "instruction", "content": instruction["instruction"]},
+            {"role": "user", "content": instruction["user"]}
+        ]
+
+        pipe = pipeline("text-generation", model="meta-llama/Llama-3.1-8B-Instruct")
+        output = pipe(messages)
+
+        # input_ids = self._tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt").to(
+        #     self._model.device)
+        #
+        # terminators = [
+        #     self._tokenizer.convert_tokens_to_ids("<|end_of_text|>"),
+        #     self._tokenizer.convert_tokens_to_ids("<|eot_id|>")
+        # ]
+        #
+        # # 미션 생성
+        # outputs = self._model.generate(
+        #     input_ids,
+        #     max_new_tokens=1024,
+        #     eos_token_id=terminators,
+        #     do_sample=True,
+        #     temperature=0.6,
+        #     top_p=0.9
+        # )
+
+        # 결과 후처리 및 출력
+
+        print(output)
+
+        return output
+        # output_dict = json.loads(raw_output)
+
+        # return output_dict
+        #
+        # # 후처리 적용
+        # processed_output = {
+        #     "mission_1": remove_prefix(output_dict.get("mission_1", ""), main_category, sub_category),
+        #     "mission_2": remove_prefix(output_dict.get("mission_2", ""), main_category, sub_category),
+        #     "mission_3": remove_prefix(output_dict.get("mission_3", ""), main_category, sub_category)
+        # }
+        #
+        # # 후처리된 출력
+        # print(processed_output)
