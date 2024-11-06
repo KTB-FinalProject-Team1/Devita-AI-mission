@@ -1,11 +1,15 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 import torch
+import json
+from vllm import LLM, SamplingParams
+from vllm.engine.arg_utils import EngineArgs
 
 
 class LLMManager:
     _instance = None
     _model = None
     _tokenizer = None
+    _device = None
 
     @classmethod
     def get_instance(cls):
@@ -19,14 +23,17 @@ class LLMManager:
         else:
             LLMManager._instance = self
 
-    def load_model(self, model_name: str = 'Bllossom/llama-3.2-Korean-Bllossom-3B'):
-        """모델과 토크나이저를 로드합니다."""
+    def load_model(self, model_name: str = 'beomi/Llama-3-Open-Ko-8B'):
+        """VLLM을 사용하여 모델 로드"""
         if self._model is None:
             self._tokenizer = AutoTokenizer.from_pretrained(model_name)
-            self._model = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                torch_dtype=torch.float16,
-                device_map="auto"
+            # self._model = AutoModelForCausalLM.from_pretrained(
+            #     model_name,
+            #     torch_dtype=torch.float16
+            # )
+            self._model = LLM(model="facebook/opt-125m",
+                tensor_parallel_size=4,  # GPU 병렬 처리 수
+                trust_remote_code=True
             )
 
     @property
@@ -126,7 +133,6 @@ class LLMManager:
             ------------------------
             {example_text}
             ------------------------
-            <|end_of_text|>
             """,
             "user": f"""
             질문: {main_category} 안에 {sub_category}를 바탕으로 개발자를 위한 높은 난이도, 중간 난이도, 쉬운 난이도 {prompt_description}을 생성하시오.
@@ -153,30 +159,42 @@ class LLMManager:
             {"role": "instruction", "content": instruction["instruction"]},
             {"role": "user", "content": instruction["user"]}
         ]
-        input_ids = self._tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt").to(
-            self._model.device)
 
-        terminators = [
-            self._tokenizer.convert_tokens_to_ids("<|end_of_text|>"),
-            self._tokenizer.convert_tokens_to_ids("<|eot_id|>")
-        ]
-
-        # 미션 생성
-        outputs = model.generate(
-            input_ids,
-            max_new_tokens=1024,
-            eos_token_id=terminators,
-            do_sample=True,
-            temperature=0.6,
-            top_p=0.9
+        sampling_params = SamplingParams(
+            temperature=0.8,  # 높을수록 더 창의적인 출력
+            top_p=0.95,  # nucleus sampling 임계값
+            max_tokens=100,  # 최대 생성 토큰 수
+            presence_penalty=0.0,
+            frequency_penalty=0.0,
         )
+        output = self._model.generate(messages, sampling_params)
+
+        # input_ids = self._tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt").to(
+        #     self._model.device)
+        #
+        # terminators = [
+        #     self._tokenizer.convert_tokens_to_ids("<|end_of_text|>"),
+        #     self._tokenizer.convert_tokens_to_ids("<|eot_id|>")
+        # ]
+        #
+        # # 미션 생성
+        # outputs = self._model.generate(
+        #     input_ids,
+        #     max_new_tokens=1024,
+        #     eos_token_id=terminators,
+        #     do_sample=True,
+        #     temperature=0.6,
+        #     top_p=0.9
+        # )
 
         # 결과 후처리 및 출력
-        raw_output = tokenizer.decode(outputs[0][input_ids.shape[-1]:], skip_special_tokens=True)
-        print(raw_output)
 
-        # # JSON 문자열을 딕셔너리로 변환
+        print(output)
+
+        return output
         # output_dict = json.loads(raw_output)
+
+        # return output_dict
         #
         # # 후처리 적용
         # processed_output = {

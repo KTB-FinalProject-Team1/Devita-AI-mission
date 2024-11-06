@@ -1,29 +1,13 @@
 from fastapi import APIRouter, Depends
-from pydantic import BaseModel
 from api.application.service import Service
 from dependency_injector.wiring import inject, Provide
+
+from api.interface.controllers.dto.dto import DailyRequestDTO, DailyResponseDTO, AutonomousRequestDTO, \
+    AutonomousResponseDTO
+from api.interface.controllers.model.model import Mission
 from containers import Container
 
 router = APIRouter(prefix='/ai')
-
-
-class Field(BaseModel):
-    major_category: str
-    sub_category: str
-
-
-class DailyRequestDTO(BaseModel):
-    user_id: str
-    fields: list[Field]
-
-
-class Mission(BaseModel):
-    level: str
-    content: str
-
-
-class DailyResponseDTO(BaseModel):
-    missions: list[Mission]
 
 
 @router.post(
@@ -45,37 +29,30 @@ def daily(
     Request Body 예시
     ```json
     {
-        "user_id": "000",
+        "user_id": 1234,
         "fields": [
             {
-                "major_category": "CS",
+                "main_category": "cs",
                 "sub_category": "자료구조"
             },
             {
-                "major_category": "language",
-                "sub_category": "JavaScript"
+                "main_category": "language",
+                "sub_category": "javascript"
             }
         ]
     }
     ```
     """
     missions = service.daily(req.user_id, req.fields)
-    res = [
-        Mission(level="상", content=missions[0]),
-        Mission(level="중", content=missions[1]),
-        Mission(level="하", content=missions[2])
-    ]
+    # res = [
+    #     Mission(level="상", content=missions[0]),
+    #     Mission(level="중", content=missions[1]),
+    #     Mission(level="하", content=missions[2])
+    # ]
 
-    return DailyResponseDTO(missions=res)
-
-
-class AutonomousRequestDTO(BaseModel):
-    user_id: str
-    fields: list[Field]
-
-
-class AutonomousResponseDTO(BaseModel):
-    missions: list[str]
+    print(missions)
+    print(type(missions))
+    return DailyResponseDTO(missions=missions)
 
 
 @router.post(
@@ -97,15 +74,15 @@ def autonomous(
     Request Body 예시
     ```json
     {
-        "user_id": "000",
+        "user_id": 1234,
         "fields": [
             {
-                "major_category": "CS",
+                "main_category": "cs",
                 "sub_category": "자료구조"
             },
             {
-                "major_category": "language",
-                "sub_category": "JavaScript"
+                "main_category": "language",
+                "sub_category": "javascript"
             }
         ]
     }
