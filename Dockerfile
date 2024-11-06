@@ -1,4 +1,4 @@
-# 베이스 이미지 설정 (Python 3.10 사용 예시)
+FROM ubuntu:18.04
 FROM python:3.11-slim
 
 # 작업 디렉토리 생성
