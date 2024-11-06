@@ -1,22 +1,21 @@
 from pydantic import BaseModel
 
-from api.interface.controllers.model.model import Field, Mission
+from api.interface.controllers.model.model import Mission
 
 
 class DailyRequestDTO(BaseModel):
-    user_id: int
-    fields: list[Field]
+    userId: int
+    categories: list[str]
 
 
 class DailyResponseDTO(BaseModel):
     # missions: list[Mission]
-    missions: str
+    missionTitle: str
 
 class AutonomousRequestDTO(BaseModel):
-    user_id: int
-    fields: list[Field]
+    userId: int
+    subCategory: str
 
 
 class AutonomousResponseDTO(BaseModel):
-    # missions: list[Mission]
-    missions: str
+    missions: list[Mission]

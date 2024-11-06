@@ -1,5 +1,4 @@
 from dependency_injector.wiring import inject
-from api.interface.controllers.model.model import Field
 from api.domain.repository.repo import IRepository
 
 
@@ -12,17 +11,16 @@ class Service:
 
     def daily(
             self,
-            user_id: str,
-            field: list[Field]
-    # ) -> list[str]:
+            userId: str,
+            categories: list[str]
     ) -> str:
-        missions = self.repo.daily(user_id, field)
-        return missions
+        mission = self.repo.daily(userId, categories)
+        return mission
 
     def autonomous(
             self,
-            user_id: str,
-            field: list[Field]
+            userId: str,
+            subCategory: str
     ) -> list[str]:
-        missions = self.repo.autonomous(user_id, field)
+        missions = self.repo.autonomous(userId, subCategory)
         return missions
