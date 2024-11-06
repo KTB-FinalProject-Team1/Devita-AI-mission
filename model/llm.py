@@ -1,4 +1,4 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+# from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 import torch
 import json
 from vllm import LLM, SamplingParams
@@ -26,7 +26,7 @@ class LLMManager:
     def load_model(self, model_name: str = 'beomi/Llama-3-Open-Ko-8B'):
         """VLLM을 사용하여 모델 로드"""
         if self._model is None:
-            self._tokenizer = AutoTokenizer.from_pretrained(model_name)
+            # self._tokenizer = AutoTokenizer.from_pretrained(model_name)
             # self._model = AutoModelForCausalLM.from_pretrained(
             #     model_name,
             #     torch_dtype=torch.float16
