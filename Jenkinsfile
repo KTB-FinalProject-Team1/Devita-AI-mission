@@ -76,36 +76,6 @@ pipeline {
         stage('Start EC2 Instance and Deploy') {
             steps {
                 script {
-                    sh '''
-                    export AWS_ACCESS_KEY_ID=$(echo $AWS_CREDENTIALS | cut -d':' -f1)
-                    export AWS_SECRET_ACCESS_KEY=$(echo $AWS_CREDENTIALS | cut -d':' -f2)
-                    aws ec2 start-instances --instance-ids $INSTANCE_ID --region $AWS_REGION
-                    aws ec2 wait instance-running --instance-ids $INSTANCE_ID --region $AWS_REGION
-                    '''
-                    
-                    sshagent(['back_PEM']) {
-                        sh '''
-                        ssh -t -o StrictHostKeyChecking=no ubuntu@10.0.2.211 << EOF
-                        export AWS_REGION='$AWS_REGION'
-                        export ECR_REGISTRY='$ECR_REGISTRY'
-                        export ECR_REPO_NAME='$ECR_REPO_NAME'
-                        export IMAGE_TAG='$IMAGE_TAG'
-                        export AWS_ACCESS_KEY_ID=\$(echo "$AWS_CREDENTIALS" | cut -d':' -f1)
-                        export AWS_SECRET_ACCESS_KEY=\$(echo "$AWS_CREDENTIALS" | cut -d':' -f2)
-
-                        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
-
-                        docker ps -qa | xargs -r docker rm
-                        docker images -q | xargs -r docker rmi
-
-                        docker pull $ECR_REGISTRY/$ECR_REPO_NAME:$IMAGE_TAG
-                        docker images
-
-                        docker run -d --name devita_ai -p 8000:8000 $ECR_REGISTRY/$ECR_REPO_NAME:$IMAGE_TAG
-                        docker ps -a
-                        '''
-                    }
-
                     build job: 'cd_pipeline'
                 }
             }
