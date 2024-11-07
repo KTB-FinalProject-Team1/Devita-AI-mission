@@ -8,8 +8,8 @@ app = FastAPI()
 app.container = Container()
 app.include_router(router=router)
 
-# llm_manager = LLMManager.get_instance()
-# llm_manager.load_model()
+llm_manager = LLMManager.get_instance()
+llm_manager.load_model()
 
 if __name__ == "__main__":
     uvicorn.run(
