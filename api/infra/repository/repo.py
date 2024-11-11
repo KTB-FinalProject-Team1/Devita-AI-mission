@@ -3,6 +3,8 @@ from model.llm import LLMManager
 from api.interface.controllers.model.model import Mission
 import json
 
+from model.mission_generator import mission_generator_free, mission_generator_daily
+
 
 class Repository(IRepository):
     def daily(
@@ -10,7 +12,9 @@ class Repository(IRepository):
             userId: int,
             categories: list[str]
     ) -> str:
-        res = LLMManager.get_instance().mission_generator_daily(categories)
+        l = LLMManager.get_instance()
+        res = mission_generator_daily(l._cs_categories, l._language_categories, l._tool_categories, l._client,
+                                      categories)
         print(str(res))
         return res
 
@@ -19,7 +23,7 @@ class Repository(IRepository):
             userId: int,
             subCategory: str
     ) -> list[Mission]:
-        res = LLMManager.get_instance().mission_generator_free(subCategory)
+        res = mission_generator_free(LLMManager.get_instance()._client, subCategory)
         return [Mission(level=1, missionTitle=res[0]),
                 Mission(level=2, missionTitle=res[1]),
                 Mission(level=3, missionTitle=res[2])
