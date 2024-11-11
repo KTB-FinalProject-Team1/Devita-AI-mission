@@ -7,10 +7,6 @@ from dotenv import load_dotenv
 class LLMManager:
     _instance = None
     _client = None
-    _cs_categories = ("DATA_STRUCTURE", "ALGORITHM", "COMPUTER_ARCHITECTURE", "NETWORK", "OPERATING_SYSTEM",
-                     "DATABASE")
-    _language_categories = ("JAVA", "JAVASCRIPT", "PYTHON")
-    _tool_categories = ("SPRING", "REACT", "PYTORCH", "DOCKER")
 
     @classmethod
     def get_instance(cls):

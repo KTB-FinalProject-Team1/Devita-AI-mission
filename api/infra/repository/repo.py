@@ -13,8 +13,7 @@ class Repository(IRepository):
             categories: list[str]
     ) -> str:
         l = LLMManager.get_instance()
-        res = mission_generator_daily(l._cs_categories, l._language_categories, l._tool_categories, l._client,
-                                      categories)
+        res = mission_generator_daily(l._client, categories)
         print(str(res))
         return res
 

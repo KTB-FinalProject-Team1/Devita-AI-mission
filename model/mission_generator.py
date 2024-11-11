@@ -2,13 +2,18 @@ import json
 import random
 
 
+_cs_categories = ("DATA_STRUCTURE", "ALGORITHM", "COMPUTER_ARCHITECTURE", "NETWORK", "OPERATING_SYSTEM",
+                  "DATABASE")
+_language_categories = ("JAVA", "JAVASCRIPT", "PYTHON")
+_tool_categories = ("SPRING", "REACT", "PYTORCH", "DOCKER")
+
 def mission_generator_free(_client, sub_category: str) -> list[str]:
-    def determine_main_category(self, sub_category: str) -> str:
-        if sub_category in self._cs_categories:
+    def determine_main_category(sub_category: str) -> str:
+        if sub_category in _cs_categories:
             return "CS"
-        elif sub_category in self._language_categories:
+        elif sub_category in _language_categories:
             return "LANGUAGE"
-        elif sub_category in self._tool_categories:
+        elif sub_category in _tool_categories:
             return "TOOL"
         else:
             raise ValueError(f"지원하지 않는 카테고리입니다: {sub_category}")
@@ -143,7 +148,7 @@ def mission_generator_free(_client, sub_category: str) -> list[str]:
         raise ValueError("미션 생성 중 오류가 발생했습니다.")
 
 
-def mission_generator_daily(_cs_categories, _language_categories, _tool_categories, _client, sub_categories: list[str]):
+def mission_generator_daily(_client, sub_categories: list[str]):
     # main_category를 sub_category에 따라 자동 지정
 
 
