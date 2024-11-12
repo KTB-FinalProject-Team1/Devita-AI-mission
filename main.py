@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
 from api.interface.controllers.controller import router
 from containers import Container
 from model.llm import LLMManager
@@ -7,6 +8,18 @@ from model.llm import LLMManager
 app = FastAPI()
 app.container = Container()
 app.include_router(router=router)
+
+origins = [
+    "http://localhost:8080",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 llm_manager = LLMManager.get_instance()
 llm_manager.load_model()
