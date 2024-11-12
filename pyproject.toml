@@ -11,6 +11,7 @@ fastapi = "^0.115.2"
 uvicorn = {extras = ["standard"], version = "^0.32.0"}
 dependency-injector = "^4.42.0"
 transformers = "^4.46.1"
+openai = "^1.54.3"
 
 [build-system]
 requires = ["poetry-core"]
