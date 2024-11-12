@@ -10,7 +10,7 @@ app.container = Container()
 app.include_router(router=router)
 
 origins = [
-    "http://localhost:8080",
+    "http://host.docker.internal:8080",
 ]
 
 app.add_middleware(
