@@ -28,7 +28,7 @@ llm_manager.load_model()
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
-        host="127.0.0.1",
+        host="0.0.0.0",
         reload=True,
         timeout_keep_alive=60,
         log_level="debug"
