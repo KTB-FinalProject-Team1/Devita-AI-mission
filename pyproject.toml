@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "devita"
+version = "0.1.0"
+description = ""
+authors = ["Do-yoon <1.kim.doyoon@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.115.2"
+uvicorn = {extras = ["standard"], version = "^0.32.0"}
+dependency-injector = "^4.42.0"
+transformers = "^4.46.1"
+openai = "^1.54.3"
+chromadb = "^0.5.23"
+langchain-openai = "^0.2.13"
+langchain = "^0.3.13"
+langsmith = "^0.2.4"
+python-dotenv = "^1.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
