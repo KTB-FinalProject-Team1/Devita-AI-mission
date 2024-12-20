@@ -1,11 +1,15 @@
 from fastapi import APIRouter, Depends
 from api.application.service import Service
 from dependency_injector.wiring import inject, Provide
-
 from api.interface.controllers.dto.dto import DailyRequestDTO, DailyResponseDTO, AutonomousRequestDTO, \
     AutonomousResponseDTO
 from api.interface.controllers.model.model import Mission
 from containers import Container
+
+# 추가 import 
+#from model.mission_generator_v2 import mission_generator # 이거 import 한거야!
+from model.mission_generator_v2 import MissionGenerator
+from fastapi import HTTPException
 
 router = APIRouter(prefix='/ai/v1/mission')
 
@@ -94,7 +98,28 @@ def autonomous(
         ]
     }
     """
-    missions = service.autonomous(req.userId, req.subCategory)
-
-    print(len(missions))
-    return AutonomousResponseDTO(missions=missions)
+    
+    # mission_generator 호출 및 결과 처리
+    generator = MissionGenerator()
+    missions_result = generator.generate_missions(str(req.subCategory))
+    
+    if not missions_result or "generated_missions" not in missions_result:
+        raise HTTPException(status_code=400, detail="미션 생성에 실패했습니다.")
+    
+    # 난이도를 level로 매핑
+    difficulty_to_level = {
+        "Advanced": 3,
+        "Intermediate": 2,
+        "Beginner": 1
+    }
+    
+    # API 응답 형식에 맞게 변환
+    formatted_missions = [
+        {
+            "level": difficulty_to_level[mission["difficulty"]],
+            "missionTitle": mission["mission"]
+        }
+        for mission in missions_result["generated_missions"]
+    ]
+    
+    return AutonomousResponseDTO(missions=formatted_missions)
